@@ -54,6 +54,7 @@ public class UserController {
                 .issuedAt(now)
                 .expiresAt(now.plus(6, ChronoUnit.HOURS))
                 .subject(loggedInUser.getEmail())
+                .claim("userId", loggedInUser.getId())
                 .build();
 
         // 3) Encode & return token
