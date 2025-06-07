@@ -1,10 +1,12 @@
 /* Global Styles */
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 body { background: #f0f2f5; color: #2e2e3e; }
+
+
 a { text-decoration: none; color: inherit; }
 
 /* Page Container */
-.page-container { display: flex; flex-direction: column; min-height: 100vh; }
+.page-container { display: flex; flex-direction: column; height: 100vh; }
 
 /* Header & Footer */
 header, footer { background: #2d2f3e; color: #f3f3ff; padding: 1rem 2rem; }
@@ -16,7 +18,28 @@ header, footer { background: #2d2f3e; color: #f3f3ff; padding: 1rem 2rem; }
 /* Profile Dropdown */
 .profile-dropdown { position: relative; }
 .profile-dropdown input { display: none; }
-.profile-icon { width: 2.5rem; height: 2.5rem; background: #4f46e5; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; font-size: 1.1rem; cursor: pointer; }
+/*.profile-icon { width: 2.5rem; height: 2.5rem; background: #4f46e5; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; font-size: 1.1rem; cursor: pointer; }*/
+
+.profile-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  overflow: hidden; /* πολύ βασικό για να μην βγαίνει έξω η εικόνα */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: #fff; /* optional, αν θες λευκό φόντο γύρω από την εικόνα */
+  border: 1px solid #ccc; /* optional, αν θες περίγραμμα */
+}
+
+.profile-icon img.profile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+
 .dropdown-menu { display: none; position: absolute; top: 3rem; right: 0; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 0.5rem; overflow: hidden; min-width: 10rem; z-index: 10; }
 .profile-dropdown .overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 5; }
 .profile-dropdown input:checked ~ .dropdown-menu,
@@ -26,20 +49,83 @@ header, footer { background: #2d2f3e; color: #f3f3ff; padding: 1rem 2rem; }
 
 /* Layout */
 .center-container { flex: 1; display: flex; padding: 1rem 2rem; gap: 1rem; overflow: hidden; }
-.threads-list { width: 14rem; background: #fff; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
+.threads-list { width: 14rem; background: #fff; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; min-height: 0;}
 .threads-list h2 { padding: 1rem; font-size: 1rem; border-bottom: 1px solid #e5e5ea; }
 .threads { flex: 1; padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; overflow-y: auto; }
-.thread-item { padding: 0.75rem 1rem; border-radius: 0.5rem; background: #f8f8f8; cursor: pointer; transition: background 0.2s; }
+/*.thread-item { padding: 0.75rem 1rem; border-radius: 0.5rem; background: #f8f8f8; cursor: pointer; transition: background 0.2s; }*/
+.thread-item-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  padding-right: 0.5rem; /* Για να μην κολλάει η ⋮ */
+}
+.thread-item {
+  flex-grow: 1; /* Για να πιάνει τον διαθέσιμο χώρο */
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background: #f8f8f8;
+  cursor: pointer;
+  transition: background 0.2s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .thread-item:hover { background: #ececf3; }
 .thread-item.active { background: #4f46e5; color: #fff; }
 
+.thread-actions {
+  display: flex;
+  align-items: center;
+  position: relative;
+  margin-left: 0.25rem;
+  flex-shrink: 0;
+}
+
+.thread-actions button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0;
+  color: #888;
+}
+
+.thread-actions button:hover {
+  color: #333;
+}
+
+.thread-options-dropdown {
+  position: absolute;
+  top: 1.5rem;
+  right: 0;
+  background: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.thread-options-dropdown div {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.thread-options-dropdown div:hover {
+  background: #f0f0f5;
+}
+
+
 /* Chat Window */
-.main-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #fff; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-.chat-window { flex: 1; display: flex; flex-direction: column; }
+.main-container { flex: 1; display: flex; min-height: 0; flex-direction: column; overflow: hidden; background: #fff; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.chat-window { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; height: 100%;}
 .chat-model-select { display: flex; justify-content: center; padding: 1rem 0; background: #fafbfc; }
 .chat-model-select select { padding: 0.5rem 1rem; border-radius: 999px; border: 1px solid #ccc; outline: none; cursor: pointer; transition: border-color 0.2s; }
 .chat-model-select select:focus { border-color: #4f46e5; }
-.messages { flex: 1; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; overflow-y: auto; }
+.messages { flex: 1; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; overflow-y: auto; scroll-behavior: smooth; }
 .message { max-width: 70%; padding: 0.75rem 1rem; border-radius: 1rem; line-height: 1.4; }
 .message.bot { background: #f0f0f5; color: #2e2e3e; align-self: flex-start; }
 .message.user { background: #4f46e5; color: #fff; align-self: flex-end; }
@@ -139,6 +225,7 @@ form { background: #fff; border-radius: 0.5rem; padding: 2rem; box-shadow: 0 2px
   justify-content: center;
   align-items: center;
   z-index: 999;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
 .modal {
@@ -149,5 +236,96 @@ form { background: #fff; border-radius: 0.5rem; padding: 2rem; box-shadow: 0 2px
   max-width: 400px;
   text-align: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease-out;
 }
 
+.threads-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border-bottom: 1px solid #e5e5ea;
+  gap: 0.5rem;
+}
+
+.threads-header h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  flex-grow: 1; /* Να πιάνει όλο το διαθέσιμο χώρο */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.new-thread-btn {
+  display: flex; /* <== αυτό το προσθέτουμε */
+  align-items: center;
+  justify-content: center;
+  background: #4f46e5;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 1.6rem;
+  height: 1.6rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.new-thread-btn:hover {
+  background: #3b3ec1;
+}
+
+
+
+/* Buttons inside modal */
+.modal button {
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s;
+}
+
+.modal .btn-secondary {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.modal .btn-secondary:hover {
+  background: #d1d5db;
+}
+
+.modal .btn-primary {
+  background: #ef4444; /* Red for Delete */
+  color: #fff;
+}
+
+.modal .btn-primary:hover {
+  background: #dc2626;
+}
+
+.modal .btn-confirm {
+  background: #4f46e5; /* Μωβ/μπλε όπως το primary του app */
+  color: #fff;
+}
+
+.modal .btn-confirm:hover {
+  background: #3b3ec1;
+}
+
+
+/* Fade animation */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Slide animation */
+@keyframes slideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

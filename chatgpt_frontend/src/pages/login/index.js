@@ -57,7 +57,7 @@ export default function LoginPage() {
             router.push("/chat");
 
         } catch (error) {
-            const msg = error?.response?.data?.message || "Το login απέτυχε. Έλεγξε τα στοιχεία σου.";
+            const msg = error?.response?.data?.message || "Login failed. Please check your credentials.";
             showMessage("error", msg);
             setEmail("");
             setPassword("");
@@ -71,7 +71,7 @@ export default function LoginPage() {
         event.preventDefault();
 
         if (signupPassword !== signupConfirm) {
-            showMessage("error", "Οι κωδικοί δεν ταιριάζουν.");
+            showMessage("error", "Password do not match.");
             return;
         }
 
@@ -82,7 +82,7 @@ export default function LoginPage() {
                 password: signupPassword
             });
 
-            showMessage("success", "Ο λογαριασμός δημιουργήθηκε. Συνδεθείτε τώρα.");
+            showMessage("success", "Account created successfully. You can now log in.");
 
             // Reset πεδία και άνοιξε το login tab
             setSignupName("");
@@ -92,7 +92,7 @@ export default function LoginPage() {
             setActiveTab("login");
 
         } catch (error) {
-            const msg = error?.response?.data?.message || "Απέτυχε η εγγραφή. Προσπαθήστε ξανά.";
+            const msg = error?.response?.data?.message || "Signup failed. Please try again.";
             showMessage("error", msg);
         }
     }
@@ -103,7 +103,7 @@ export default function LoginPage() {
             <Head>
                 <title>Login | ChatGPT App</title>
                 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-                <link rel="icon" href="/favicon.ico"/>
+                <link rel="icon" href="/bootcamp-ico.ico" />
             </Head>
             <div className="page-container">
                 <header>

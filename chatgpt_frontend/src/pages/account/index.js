@@ -43,7 +43,7 @@ export default function AccountPage() {
             })
             .catch((err) => {
                 console.warn("❌ Αποτυχία GET /me:", err);
-                setMessage("⚠️ Αποτυχία φόρτωσης προφίλ.");
+                setMessage("Failure to load profile");
             });
     }, []);
 
@@ -85,9 +85,9 @@ export default function AccountPage() {
                     }
                 }
             );
-            setMessage("✅ Οι αλλαγές αποθηκεύτηκαν!");
+            setMessage("Changes saved successfully!");
         } catch (error) {
-            const errMsg = error?.response?.data?.message || "❌ Σφάλμα κατά την αποθήκευση.";
+            const errMsg = error?.response?.data?.message || "Error while saving changes.";
             setMessage(errMsg);
         } finally {
             setLoading(false);
@@ -108,7 +108,7 @@ export default function AccountPage() {
             localStorage.removeItem("token");
             window.location.href = "/login";
         } catch (error) {
-            setMessage("❌ Αποτυχία διαγραφής λογαριασμού.");
+            setMessage("Failed to delete account.");
         }
     };
 
@@ -117,20 +117,25 @@ export default function AccountPage() {
         <>
             <Head>
                 <title>Account | Chat App</title>
-                <link rel="icon" href="/favicon.ico"/>
+                <link rel="icon" href="/bootcamp-ico.ico" />
             </Head>
 
             <div className="page-container">
                 <header>
                     <div className="header-content">
-                        <div className="header-brand">
+                        {/*<div className="header-brand">*/}
+                        {/*    <img src="./bootcamp-2025.03-logo.jpg" alt="Logo" className="header-logo"/>*/}
+                        {/*    <div className="header-title">Chat Application</div>*/}
+                        {/*</div>*/}
+                        <a href="/chat" className="header-brand" style={{ textDecoration: "none", color: "inherit" }}>
                             <img src="./bootcamp-2025.03-logo.jpg" alt="Logo" className="header-logo"/>
                             <div className="header-title">Chat Application</div>
-                        </div>
+                        </a>
+
                         <div className="profile-dropdown">
                             <input type="checkbox" id="profile-toggle"/>
                             <label htmlFor="profile-toggle" className="profile-icon">
-                                {formData.name?.charAt(0).toUpperCase() || "U"}
+                                <img src="/profile.png" alt="Profile" className="profile-img" />
                             </label>
                             <div className="dropdown-menu">
                                 <a href="/account">Profile</a>
@@ -227,20 +232,20 @@ export default function AccountPage() {
                             {showModal && (
                                 <div className="modal-overlay">
                                     <div className="modal">
-                                        <h2>Επιβεβαίωση Διαγραφής</h2>
-                                        <p>Είσαι σίγουρος ότι θέλεις να διαγράψεις τον λογαριασμό σου; Αυτή η ενέργεια δεν αναιρείται.</p>
+                                        <h2>Confirm Account Deletion</h2>
+                                        <p>Are you sure you want to delete your account? This action cannot be undone.</p>
                                         <div style={{ marginTop: "1rem" }}>
                                             <button
                                                 onClick={handleDeleteAccount}
                                                 style={{ backgroundColor: "#dc2626", color: "white", marginRight: "1rem", padding: "0.5rem 1rem" }}
                                             >
-                                                Ναι, διαγραφή
+                                                Yes, delete account
                                             </button>
                                             <button
                                                 onClick={() => setShowModal(false)}
                                                 style={{ backgroundColor: "#e5e7eb", padding: "0.5rem 1rem" }}
                                             >
-                                                Άκυρο
+                                                Cancel
                                             </button>
                                         </div>
                                     </div>
