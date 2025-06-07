@@ -5,6 +5,8 @@ import com.chatgpt.chatgpt_project.models.dto.user.UserRegisterDTO;
 import com.chatgpt.chatgpt_project.models.dto.user.UserResponseDTO;
 import com.chatgpt.chatgpt_project.models.dto.user.UserUpdateDTO;
 
+import java.util.List;
+
 public class UserMapper {
     public static User toEntity(UserRegisterDTO dto) {
         User user = new User();
@@ -14,7 +16,8 @@ public class UserMapper {
         return user;
     }
 
-    public static UserResponseDTO toResponseDTO(User user) {
+
+    public static UserResponseDTO toResponseDTO(User user, List<String> traits) {
         return new UserResponseDTO(
                 user.getId(),
                 user.getName(),
@@ -22,8 +25,13 @@ public class UserMapper {
                 user.getAboutMe(),
                 user.getCustomPrompt(),
                 user.getWhatDoYouDo(),
-                user.getAnythingElse()
+                user.getAnythingElse(),
+                traits
         );
+    }
+
+    public static UserResponseDTO toResponseDTO(User user) {
+        return toResponseDTO(user, List.of());
     }
 
     public static void updateUserFromDTO(User user, UserUpdateDTO dto) {

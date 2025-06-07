@@ -4,17 +4,25 @@ import com.chatgpt.chatgpt_project.exceptions.ChatgptException;
 import com.chatgpt.chatgpt_project.models.Message;
 import com.chatgpt.chatgpt_project.models.User;
 import com.chatgpt.chatgpt_project.models.ChatThread;
+import com.chatgpt.chatgpt_project.models.UserTrait;
 import com.chatgpt.chatgpt_project.models.dto.chat.ChatCompletionRequest;
 import com.chatgpt.chatgpt_project.models.dto.chat.ChatCompletionResponse;
 import com.chatgpt.chatgpt_project.models.dto.chat.ChatMessage;
 import com.chatgpt.chatgpt_project.repository.MessageRepository;
 import com.chatgpt.chatgpt_project.repository.ChatThreadRepository;
 import com.chatgpt.chatgpt_project.repository.UserRepository;
+import com.chatgpt.chatgpt_project.repository.UserTraitRepository;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Value;
+import com.chatgpt.chatgpt_project.utils.FileContentExtractor;
+import java.nio.file.Paths;
+import java.nio.file.Path;
+
+
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -26,16 +34,23 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final ChatThreadRepository chatThreadRepository;
     private final UserRepository userRepository;
+    private final UserTraitRepository userTraitRepository;
 
-    private String groqApiKey = "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";
+    @Value("${groq.api.key}")
+    private String groqApiKey;
 
-    public MessageService(MessageRepository messageRepository, ChatThreadRepository chatThreadRepository, UserRepository userRepository) {
+    public MessageService(MessageRepository messageRepository, ChatThreadRepository chatThreadRepository, UserRepository userRepository, UserTraitRepository userTraitRepository) {
         this.messageRepository = messageRepository;
         this.chatThreadRepository = chatThreadRepository;
         this.userRepository = userRepository;
+        this.userTraitRepository = userTraitRepository;
     }
 
-    public Message createMessageAndGetCompletion(Long userId, Long threadId, String content, String model) throws ChatgptException {
+    String safeValue(String value, String fallback) {
+        return (value != null && !value.isBlank()) ? value : fallback;
+    }
+
+    public Message createMessageAndGetCompletion(Long userId, Long threadId, String content, String model, String fileUrl) throws ChatgptException {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ChatgptException("User not found", HttpStatus.NOT_FOUND));
@@ -43,6 +58,52 @@ public class MessageService {
         ChatThread thread = chatThreadRepository.findById(threadId)
                 .orElseThrow(() -> new ChatgptException("Thread not found", HttpStatus.NOT_FOUND));
 
+        List<String> traits = userTraitRepository.findByUserId(userId).stream()
+                .map(UserTrait::getTrait)
+                .toList();
+
+        String traitsText = traits.isEmpty() ? "None specified." : String.join(", ", traits);
+
+        String fileContent = "";
+
+        if (fileUrl != null) {
+            try {
+                // Προσοχή → εδώ "απογυμνώνουμε" το url prefix, πχ αν fileUrl = "/uploads/xxx" → κρατάμε το path
+                String filePathStr = fileUrl.startsWith("/") ? fileUrl.substring(1) : fileUrl;
+                Path filePath = Paths.get(filePathStr);
+
+                // Extract content
+                String originalFilename = filePath.getFileName().toString();
+                fileContent = FileContentExtractor.extractFileContent(filePath, originalFilename);
+            } catch (Exception e) {
+                fileContent = "Failed to read uploaded file content.";
+            }
+        }
+
+
+        String systemPrompt = """
+            You are a helpful assistant.
+            You are chatting with %s.
+            About the user: %s.
+            Occupation: %s.
+            Additional info: %s.
+            Please adapt your tone and style according to the following user traits: %s.            
+            """.formatted(
+                safeValue(user.getName(), "Anonymous User"),
+                safeValue(user.getAboutMe(), "Not provided."),
+                safeValue(user.getWhatDoYouDo(), "Not provided."),
+                safeValue(user.getAnythingElse(), "Not provided."),
+                traitsText
+            );
+
+        if (!fileContent.isBlank()) {
+            systemPrompt += """
+
+            The user has uploaded a document with the following content:
+            
+            %s
+            """.formatted(fileContent);
+        }
 
         // Save user message first
         Message userMessage = Message.builder()
@@ -52,45 +113,10 @@ public class MessageService {
                 .createdAt(LocalDateTime.now())
                 .thread(thread)
                 .user(user)
+                .fileUrl(fileUrl)
                 .build();
 
         messageRepository.save(userMessage);
-//
-//        // Call Groq API
-//        RestTemplate restTemplate = new RestTemplate();
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.add("Authorization", "Bearer " + groqApiKey);
-//
-//        ChatCompletionRequest chatCompletionRequest = new ChatCompletionRequest();
-//        chatCompletionRequest.setModel(model);
-//        ChatMessage systemMessage = new ChatMessage("system", "You are a helpful assistant.");
-//        ChatMessage userChatMessage = new ChatMessage("user", content);
-//
-//        chatCompletionRequest.setMessages(List.of(systemMessage, userChatMessage));
-//
-//        HttpEntity<ChatCompletionRequest> httpEntity =
-//                new HttpEntity<>(chatCompletionRequest, headers);
-//
-//        ChatCompletionResponse response = restTemplate.postForEntity(
-//                "https://api.groq.com/openai/v1/chat/completions",
-//                httpEntity,
-//                ChatCompletionResponse.class
-//        ).getBody();
-//
-//        // Save LLM reply message
-//        Message llmMessage = Message.builder()
-//                .content(response.getChoices().get(0).getMessage().getContent())
-//                .isLLMGenerated(true)
-//                .completionModel(response.getModel())
-//                .createdAt(LocalDateTime.now())
-//                .thread(thread)
-//                .user(null) // αν θες μπορείς να έχεις ειδικό "BOT user"
-//                .build();
-//
-//        messageRepository.save(llmMessage);
-//
-//        // Return LLM reply to frontend
-//        return llmMessage;
 
         // Prepare chat history for LLM
         List<Message> previousMessages = messageRepository.findByThreadIdOrderByCreatedAtAsc(threadId);
@@ -102,7 +128,7 @@ public class MessageService {
         }
 
         // Build full ChatMessage list
-        ChatMessage systemMessage = new ChatMessage("system", "You are a helpful assistant.");
+        ChatMessage systemMessage = new ChatMessage("system", systemPrompt);
 
         List<ChatMessage> chatHistory = previousMessages.stream()
                 .map(m -> new ChatMessage(

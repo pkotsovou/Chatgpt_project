@@ -12,7 +12,8 @@ public class MessageMapper {
                 message.getCompletionModel(),
                 message.getCreatedAt(),
                 message.getThread().getId(),
-                message.getUser() != null ? message.getUser().getId() : null
+                message.getUser() != null ? message.getUser().getId() : null,
+                message.getFileUrl()
         );
     }
 }

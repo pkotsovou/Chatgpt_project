@@ -32,6 +32,10 @@ public class Message {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "file_url")
+    private String fileUrl;
+
+
     // To thread στο οποίο ανήκει το μήνυμα
     @ManyToOne
     @JoinColumn(name = "thread_id", nullable = false)

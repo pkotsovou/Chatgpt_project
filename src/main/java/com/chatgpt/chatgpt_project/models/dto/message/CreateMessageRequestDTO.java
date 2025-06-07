@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateMessageRequestDTO {
-    private Long userId;
     private Long threadId;
     private String content;
     private String model;

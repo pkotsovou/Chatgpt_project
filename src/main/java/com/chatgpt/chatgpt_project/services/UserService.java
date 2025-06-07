@@ -7,6 +7,7 @@ import com.chatgpt.chatgpt_project.models.dto.user.UserRegisterDTO;
 import com.chatgpt.chatgpt_project.models.dto.user.UserResponseDTO;
 import com.chatgpt.chatgpt_project.models.dto.user.UserUpdateDTO;
 import com.chatgpt.chatgpt_project.repository.UserRepository;
+import com.chatgpt.chatgpt_project.repository.UserTraitRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -16,6 +17,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -23,9 +25,11 @@ public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final UserTraitRepository userTraitRepository;
 
-    public UserService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, UserTraitRepository userTraitRepository, BCryptPasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.userTraitRepository = userTraitRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -62,7 +66,13 @@ public class UserService implements UserDetailsService {
     public ResponseEntity<UserResponseDTO> getMe(Authentication authentication) throws ChatgptException {
         User user = extractUser(authentication);
         System.out.println("Authenticated as: " + authentication.getName());
-        return ResponseEntity.ok(UserMapper.toResponseDTO(user));
+
+        // Βρίσκουμε traits του user
+        List<String> traits = userTraitRepository.findByUserId(user.getId()).stream()
+                .map(t -> t.getTrait())
+                .toList();
+
+        return ResponseEntity.ok(UserMapper.toResponseDTO(user, traits));
     }
 
 
@@ -85,7 +95,12 @@ public class UserService implements UserDetailsService {
         user.setAnythingElse(updatedUserDto.getAnythingElse());
 
         User updatedUser = userRepository.save(user);
-        return ResponseEntity.ok(UserMapper.toResponseDTO(updatedUser));
+
+        List<String> traits = userTraitRepository.findByUserId(user.getId()).stream()
+                .map(t -> t.getTrait())
+                .toList();
+
+        return ResponseEntity.ok(UserMapper.toResponseDTO(updatedUser, traits));
     }
 
     // Delete me
