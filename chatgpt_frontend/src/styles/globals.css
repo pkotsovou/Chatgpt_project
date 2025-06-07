@@ -329,3 +329,43 @@ form { background: #fff; border-radius: 0.5rem; padding: 2rem; box-shadow: 0 2px
   from { transform: translateY(-20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
+
+.math {
+  font-family: 'Cambria Math', 'Times New Roman', serif;
+  background-color: #f9fafb;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-style: italic;
+  color: #1f2937; /* dark gray */
+}
+
+code {
+  background-color: #1f2937;  /* dark background */
+  color: #f8f8f2;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.95em;
+}
+
+pre code {
+  display: block;
+  padding: 1rem;
+  background-color: #1f2937; /* dark background */
+  color: #f8f8f2;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 0.9em;
+}
+
+ul {
+  padding-left: 2rem;  /* πιο μεγάλο αριστερό padding */
+  margin: 0.5rem 0;
+}
+
+li {
+  margin-bottom: 0.25rem;
+  line-height: 1.5;
+}
+
+

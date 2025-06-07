@@ -6,6 +6,7 @@ import {useRouter} from "next/router";
 export default function ChatPage() {
 
 
+    const [isAuthorized, setIsAuthorized] = useState(true);
     const [threads, setThreads] = useState([]);
     const [activeThreadId, setActiveThreadId] = useState(null);
     const [messages, setMessages] = useState([]);
@@ -18,7 +19,8 @@ export default function ChatPage() {
     const [threadIdToRename, setThreadIdToRename] = useState(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [threadIdToDelete, setThreadIdToDelete] = useState(null);
-
+    const [selectedFile, setSelectedFile] = useState(null);
+    const fileInputRef = useRef(null);
 
 
 
@@ -31,7 +33,11 @@ export default function ChatPage() {
         const token = localStorage.getItem("token");
 
         if (!token) {
-            window.location.href = "/login";
+            // window.location.href = "/login";
+            // return;
+            console.warn("No token - redirecting to login");
+            setIsAuthorized(false);
+            router.push("/login");
             return;
         }
 
@@ -43,22 +49,35 @@ export default function ChatPage() {
             }
         })
             .then(response => {
+                if (response.status === 401) {
+                    console.warn("Unauthorized - redirecting to login");
+                    localStorage.removeItem("token");
+                    setIsAuthorized(false);
+                    router.push("/login");
+                    return Promise.reject("Unauthorized");
+                }
                 if (!response.ok) {
                     throw new Error("Failed to fetch threads");
                 }
+
                 return response.json();
             })
             .then(data => {
-                console.log("Fetched threads:", data);
+                // Εδώ θα μπει ΜΟΝΟ αν δεν είχαμε 401
                 setThreads(data);
                 if (data.length > 0) {
-                    setActiveThreadId(data[0].id); // Set first thread as active
+                    setActiveThreadId(data[0].id);
                 }
             })
             .catch(error => {
+                if (error === "Unauthorized") {
+                    // Ήδη γίνεται redirect, μην κάνεις log
+                    return;
+                }
                 console.error("Error fetching threads:", error);
             });
-    }, []);
+
+    }, [router]);
 
     // Φορτώνουμε τα messages όταν αλλάζει το activeThreadId
     useEffect(() => {
@@ -89,51 +108,102 @@ export default function ChatPage() {
     }, [activeThreadId]);
 
 
-    // στέλνουμε νέο message
     const handleSendMessage = () => {
         const token = localStorage.getItem("token");
 
-        if (!newMessageContent.trim() || activeThreadId == null) return;
+        if (!newMessageContent.trim() && !selectedFile) return; // Μην στείλεις άδειο
 
-        fetch("http://localhost:8080/messages", {
-            method: "POST",
-            headers: {
-                "Authorization": "Bearer " + token,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                userId: null, // userId δεν το στέλνεις αν το βγάζει από το token
+        if (activeThreadId == null) return;
+
+        if (selectedFile) {
+            // Με αρχείο → χρησιμοποιούμε /messages/upload
+            const formData = new FormData();
+            formData.append("data", JSON.stringify({
                 threadId: activeThreadId,
                 content: newMessageContent,
                 model: selectedModel
-            })
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Failed to send message");
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log("LLM response:", data);
+            }));
+            formData.append("file", selectedFile);
 
-                // Προσθέτουμε το user message και το LLM message στο chat
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        id: Math.random(), // temp id
-                        content: newMessageContent,
-                        isLLMGenerated: false
-                    },
-                    data // το LLM message από το backend
-                ]);
-
-                setNewMessageContent("");
+            fetch("http://localhost:8080/messages/upload", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + token
+                    // ⚠️ Μην βάλεις Content-Type → το βάζει αυτόματα το browser (multipart/form-data)
+                },
+                body: formData
             })
-            .catch(error => {
-                console.error("Error sending message:", error);
-            });
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Failed to send message with file");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("LLM response (with file):", data);
+
+                    setMessages((prev) => [
+                        ...prev,
+                        {
+                            id: Math.random(),
+                            content: newMessageContent,
+                            isLLMGenerated: false,
+                            fileUrl: URL.createObjectURL(selectedFile), // προσωρινά
+                            fileName: selectedFile.name
+                        },
+                        data
+                    ]);
+
+                    // Reset inputs
+                    setNewMessageContent("");
+                    setSelectedFile(null);
+                })
+                .catch(error => {
+                    console.error("Error sending message with file:", error);
+                });
+        } else {
+            // Χωρίς αρχείο → κανονικό /messages
+            fetch("http://localhost:8080/messages", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + token,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    threadId: activeThreadId,
+                    content: newMessageContent,
+                    model: selectedModel
+                })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Failed to send message");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("LLM response:", data);
+
+                    setMessages((prev) => [
+                        ...prev,
+                        {
+                            id: Math.random(),
+                            content: newMessageContent,
+                            isLLMGenerated: false
+                        },
+                        data
+                    ]);
+
+                    setNewMessageContent("");
+                })
+                .catch(error => {
+                    console.error("Error sending message:", error);
+                });
+        }
     };
+
+
+
 
     useEffect(() => {
         if (messagesEndRef.current) {
@@ -280,6 +350,56 @@ export default function ChatPage() {
             });
     };
 
+    function formatMessage(content) {
+        let formatted = content
+            // Escape HTML tags first (optional security)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+
+            // Block code ```...``` (triple backticks)
+            .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+
+            // Inline code `...` (single backtick)
+            .replace(/`([^`\n]+)`/g, '<code>$1</code>')
+
+            // Math block or inline: $...$
+            .replace(/\$(.+?)\$/g, '<span class="math">$1</span>')
+
+            // URLs
+            .replace(
+                /(https?:\/\/[^\s]+)/g,
+                '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+            )
+
+            // Bold **...** or *...*
+            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+            .replace(/\*(.*?)\*/g, "<strong>$1</strong>")
+
+            // Italic _..._
+            .replace(/_(.*?)_/g, "<em>$1</em>")
+
+            // Bulleted lists (lines starting with *)
+            .replace(
+                /(?:^|\n)(\* .+(?:\n\* .+)*)/g,
+                (match, items) => {
+                    const listItems = items
+                        .split('\n')
+                        .map(line => line.replace(/^\* /, '').trim())
+                        .map(item => `<li>${item}</li>`)
+                        .join('');
+                    return `<ul>${listItems}</ul>`;
+                }
+            )
+
+            // New lines
+            .replace(/\n/g, "<br/>");
+
+        return formatted;
+    }
+
+
+
 
 
 
@@ -380,16 +500,155 @@ export default function ChatPage() {
 
                                 {messages.map((msg) => (
                                     <div key={msg.id} className={`message ${msg.isLLMGenerated ? "bot" : "user"}`}>
-                                        {msg.content}
+                                        <div
+                                            style={{ whiteSpace: "pre-wrap" }}
+                                            dangerouslySetInnerHTML={{ __html: formatMessage(msg.content) }}
+                                        ></div>
+                                        {msg.fileUrl && (
+                                            <div style={{
+                                                marginTop: "0.5rem",
+                                                fontSize: "0.9rem",
+                                                color: "#374151",
+                                                backgroundColor: "#f9fafb",
+                                                padding: "0.5rem 1rem",
+                                                borderRadius: "8px",
+                                                border: "1px solid #d1d5db",
+                                                display: "flex",
+                                                alignItems: "center"
+                                            }}>
+                                                📎&nbsp;
+                                                <a
+                                                    href={msg.fileUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    style={{ textDecoration: "underline", color: "#0D9488" }}
+                                                >
+                                                    {msg.fileName || "File"}
+                                                </a>
+                                            </div>
+                                        )}
+
                                     </div>
                                 ))}
 
+
                             </div>
-                            <div className="input-container">
-                                <input type="text" placeholder="Type a message…" value={newMessageContent}
-                                       onChange={(e) => setNewMessageContent(e.target.value)}/>
-                                <button onClick={handleSendMessage}>➤</button>
+                            <div className="input-container" style={{ position: "relative" }}>
+                                {selectedFile && (
+                                    <div style={{
+                                        marginBottom: "0.5rem",
+                                        fontSize: "0.9rem",
+                                        color: "#374151",
+                                        backgroundColor: "#f9fafb",
+                                        padding: "0.5rem 1rem",
+                                        borderRadius: "8px",
+                                        border: "1px solid #d1d5db",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between"
+                                    }}>
+                                        <span>📄 Selected file: {selectedFile.name}</span>
+                                        <button
+                                            onClick={() => setSelectedFile(null)}
+                                            style={{
+                                                background: "transparent",
+                                                border: "none",
+                                                color: "#dc2626",
+                                                fontSize: "1rem",
+                                                cursor: "pointer",
+                                                fontWeight: "bold"
+                                            }}
+                                            title="Remove file"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                )}
+
+
+                                <input
+                                    type="text"
+                                    placeholder="Type a message…"
+                                    value={newMessageContent}
+                                    onChange={(e) => setNewMessageContent(e.target.value)}
+                                    style={{
+                                        width: "100%",
+                                        paddingRight: "90px", // χώρο για τα κουμπιά
+                                        paddingLeft: "0.75rem",
+                                        paddingTop: "0.75rem",
+                                        paddingBottom: "0.75rem",
+                                        borderRadius: "9999px",
+                                        border: "1px solid #d1d5db",
+                                        fontSize: "1rem"
+                                    }}
+                                />
+
+                                <div style={{
+                                    position: "absolute",
+                                    right: "10px",
+                                    top: "50%",
+                                    transform: "translateY(-50%)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "0.5rem"
+                                }}>
+                                    <label
+                                        title="Choose file"
+                                        style={{
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            width: "40px",
+                                            height: "40px",
+                                            borderRadius: "50%",
+                                            backgroundColor: "#f3f4f6",
+                                            cursor: "pointer",
+                                            fontSize: "1.2rem",
+                                            border: "1px solid #d1d5db",
+                                            transition: "background-color 0.2s ease"
+                                        }}
+                                    >
+                                        📎
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef} // Εδώ απλά το βάζεις
+                                            style={{ display: "none" }}
+                                            onChange={(e) => {
+                                                const file = e.target.files[0];
+                                                if (file) {
+                                                    setSelectedFile(file);
+                                                    // Reset input value so choosing the same file again works:
+                                                    fileInputRef.current.value = null;
+                                                }
+                                            }}
+                                            accept=".pdf,.txt"
+                                        />
+                                    </label>
+
+                                    <button
+                                        title="Send message"
+                                        onClick={handleSendMessage}
+                                        style={{
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            width: "40px",
+                                            height: "40px",
+                                            borderRadius: "50%",
+                                            color: "#fff",
+                                            fontSize: "1.2rem",
+                                            border: "none",
+                                            cursor: "pointer",
+                                            transition: "background-color 0.2s ease"
+                                        }}
+                                    >
+                                        ➤
+                                    </button>
+                                </div>
                             </div>
+
+
+
                         </div>
                     </main>
 

@@ -15,6 +15,8 @@ export default function AccountPage() {
     const [email, setEmail] = useState(""); // ξεχωριστό state
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState(null);
+    const [traits, setTraits] = useState([]);
+
 
     const router = useRouter();
 
@@ -85,6 +87,20 @@ export default function AccountPage() {
                     }
                 }
             );
+
+            // 2. Save traits
+            await axios.post(
+                "http://localhost:8080/api/traits/me",
+                {
+                    traits: traits
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
             setMessage("Changes saved successfully!");
         } catch (error) {
             const errMsg = error?.response?.data?.message || "Error while saving changes.";
@@ -111,6 +127,48 @@ export default function AccountPage() {
             setMessage("Failed to delete account.");
         }
     };
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        // 1. Load user profile
+        axios
+            .get("http://localhost:8080/api/users/me", {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            .then((res) => {
+                const data = res.data;
+                console.log("🔁 Φόρτωση χρήστη:", data);
+                setFormData({
+                    name: data.name || "",
+                    intro: data.customPrompt || "",
+                    nickname: data.aboutMe || "",
+                    job: data.whatDoYouDo || "",
+                    notes: data.anythingElse || ""
+                });
+                setEmail(data.email || "");
+            })
+            .catch((err) => {
+                console.warn("❌ Αποτυχία GET /me:", err);
+                setMessage("Failure to load profile");
+            });
+
+        // 2. Load user traits
+        axios
+            .get("http://localhost:8080/api/traits/me", {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            .then((res) => {
+                console.log("🔁 Φόρτωση traits:", res.data);
+                setTraits(res.data.traits || []);
+            })
+            .catch((err) => {
+                console.warn("❌ Αποτυχία GET /traits/me:", err);
+            });
+
+    }, []);
+
 
 
     return (
@@ -186,17 +244,25 @@ export default function AccountPage() {
                             <div className="form-group">
                                 <label>What traits should ChatGPT have?</label>
                                 <div className="traits">
-                                    <label><input type="checkbox"/> Chatty</label>
-                                    <label><input type="checkbox"/> Witty</label>
-                                    <label><input type="checkbox"/> Straight shooting</label>
-                                    <label><input type="checkbox"/> Encouraging</label>
-                                    <label><input type="checkbox"/> Gen Z</label>
-                                    <label><input type="checkbox"/> Skeptical</label>
-                                    <label><input type="checkbox"/> Traditional</label>
-                                    <label><input type="checkbox"/> Forward thinking</label>
-                                    <label><input type="checkbox"/> Poetic</label>
+                                    {["Chatty", "Witty", "Straight shooting", "Encouraging", "Gen Z", "Skeptical", "Traditional", "Forward thinking", "Poetic"].map((trait) => (
+                                        <label key={trait}>
+                                            <input
+                                                type="checkbox"
+                                                checked={traits.includes(trait)}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setTraits([...traits, trait]);
+                                                    } else {
+                                                        setTraits(traits.filter((t) => t !== trait));
+                                                    }
+                                                }}
+                                            />{" "}
+                                            {trait}
+                                        </label>
+                                    ))}
                                 </div>
                             </div>
+
 
                             <div className="form-group">
                                 <label htmlFor="notes">Anything else ChatGPT should know about you?</label>
