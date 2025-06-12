@@ -16,6 +16,7 @@ export default function AccountPage() {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState(null);
     const [traits, setTraits] = useState([]);
+    const [isAccountDeleted, setIsAccountDeleted] = useState(false);
 
 
     const router = useRouter();
@@ -25,8 +26,9 @@ export default function AccountPage() {
 
     useEffect(() => {
         const token = localStorage.getItem("token");
-        if (!token) return;
+        if (!token || isAccountDeleted) return; // <<-- ✅ check για να ΜΗΝ τρέχουν τα GET μετά το delete
 
+        // 1. Load user profile
         axios
             .get("http://localhost:8080/api/users/me", {
                 headers: { Authorization: `Bearer ${token}` }
@@ -47,7 +49,23 @@ export default function AccountPage() {
                 console.warn("❌ Αποτυχία GET /me:", err);
                 setMessage("Failure to load profile");
             });
-    }, []);
+
+        // 2. Load user traits
+        axios
+            .get("http://localhost:8080/api/traits/me", {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            .then((res) => {
+                console.log("🔁 Φόρτωση traits:", res.data);
+                setTraits(res.data.traits || []);
+            })
+            .catch((err) => {
+                console.warn("❌ Αποτυχία GET /traits/me:", err);
+            });
+
+    }, [isAccountDeleted]); // <<-- ✅ added dependency για να ξανατρέχει ΜΟΝΟ αν αλλάξει το isAccountDeleted
+
+
 
     const handleChange = (e) => {
         const { id, value } = e.target;
@@ -58,6 +76,11 @@ export default function AccountPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        e.preventDefault();
+        if (isAccountDeleted) {
+            console.log("Skipping submit, account is deleted.");
+            return;
+        }
         console.log("👉 Payload που θα σταλεί:", {
             name: formData.name,
             customPrompt: formData.intro,
@@ -121,55 +144,13 @@ export default function AccountPage() {
             await axios.delete("http://localhost:8080/api/users/me", {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            setIsAccountDeleted(true);
             localStorage.removeItem("token");
-            window.location.href = "/login";
+            router.push("/login");
         } catch (error) {
             setMessage("Failed to delete account.");
         }
     };
-
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (!token) return;
-
-        // 1. Load user profile
-        axios
-            .get("http://localhost:8080/api/users/me", {
-                headers: { Authorization: `Bearer ${token}` }
-            })
-            .then((res) => {
-                const data = res.data;
-                console.log("🔁 Φόρτωση χρήστη:", data);
-                setFormData({
-                    name: data.name || "",
-                    intro: data.customPrompt || "",
-                    nickname: data.aboutMe || "",
-                    job: data.whatDoYouDo || "",
-                    notes: data.anythingElse || ""
-                });
-                setEmail(data.email || "");
-            })
-            .catch((err) => {
-                console.warn("❌ Αποτυχία GET /me:", err);
-                setMessage("Failure to load profile");
-            });
-
-        // 2. Load user traits
-        axios
-            .get("http://localhost:8080/api/traits/me", {
-                headers: { Authorization: `Bearer ${token}` }
-            })
-            .then((res) => {
-                console.log("🔁 Φόρτωση traits:", res.data);
-                setTraits(res.data.traits || []);
-            })
-            .catch((err) => {
-                console.warn("❌ Αποτυχία GET /traits/me:", err);
-            });
-
-    }, []);
-
-
 
     return (
         <>
@@ -271,7 +252,7 @@ export default function AccountPage() {
                                           onChange={handleChange}/>
                             </div>
 
-                            <button type="submit" className="submit-btn" disabled={loading}>
+                            <button type="submit" className="submit-btn" disabled={loading || isAccountDeleted}>
                                 {loading ? "Saving..." : "Save Changes"}
                             </button>
                             <button

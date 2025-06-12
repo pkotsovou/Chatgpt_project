@@ -2,10 +2,13 @@ package com.chatgpt.chatgpt_project.services;
 
 import com.chatgpt.chatgpt_project.exceptions.ChatgptException;
 import com.chatgpt.chatgpt_project.mappers.UserMapper;
+import com.chatgpt.chatgpt_project.models.ChatThread;
 import com.chatgpt.chatgpt_project.models.User;
 import com.chatgpt.chatgpt_project.models.dto.user.UserRegisterDTO;
 import com.chatgpt.chatgpt_project.models.dto.user.UserResponseDTO;
 import com.chatgpt.chatgpt_project.models.dto.user.UserUpdateDTO;
+import com.chatgpt.chatgpt_project.repository.ChatThreadRepository;
+import com.chatgpt.chatgpt_project.repository.MessageRepository;
 import com.chatgpt.chatgpt_project.repository.UserRepository;
 import com.chatgpt.chatgpt_project.repository.UserTraitRepository;
 import org.springframework.http.HttpStatus;
@@ -16,6 +19,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,13 +28,17 @@ import java.util.Optional;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
+    private final MessageRepository messageRepository;
+    private final ChatThreadRepository chatThreadRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final UserTraitRepository userTraitRepository;
 
-    public UserService(UserRepository userRepository, UserTraitRepository userTraitRepository, BCryptPasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, UserTraitRepository userTraitRepository, BCryptPasswordEncoder passwordEncoder, ChatThreadRepository chatThreadRepository, MessageRepository messageRepository) {
         this.userRepository = userRepository;
         this.userTraitRepository = userTraitRepository;
         this.passwordEncoder = passwordEncoder;
+        this.chatThreadRepository = chatThreadRepository;
+        this.messageRepository = messageRepository;
     }
 
     @Override
@@ -103,12 +111,22 @@ public class UserService implements UserDetailsService {
         return ResponseEntity.ok(UserMapper.toResponseDTO(updatedUser, traits));
     }
 
-    // Delete me
+    @Transactional
     public ResponseEntity<?> deleteMe(Authentication authentication) throws ChatgptException {
         User user = extractUser(authentication);
+
+        // 1. Fetch threads first
+        List<ChatThread> threads = chatThreadRepository.findByUserId(user.getId());
+        chatThreadRepository.deleteAll(threads);
+
+        // 2. Delete user
         userRepository.delete(user);
+
         return ResponseEntity.noContent().build();
     }
+
+
+
 
     // Helper
     private User extractUser(Authentication authentication) throws ChatgptException {

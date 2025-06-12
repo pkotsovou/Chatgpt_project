@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,8 +41,15 @@ public class UserTraitService {
     @Transactional
     public void saveTraitsForUser(Long userId, UserTraitDTO dto) throws ChatgptException {
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ChatgptException("User not found", HttpStatus.NOT_FOUND));
+        // Δεν θέλουμε exception → Optional<User>
+        Optional<User> optionalUser = userRepository.findById(userId);
+
+        if (optionalUser.isEmpty()) {
+            // Αν δεν υπάρχει user, απλά return.
+            return;
+        }
+
+        User user = optionalUser.get();
 
         // Για απλότητα → σβήνουμε όλα τα προηγούμενα traits και ξαναβάζουμε τα νέα
         userTraitRepository.deleteByUserId(userId);
