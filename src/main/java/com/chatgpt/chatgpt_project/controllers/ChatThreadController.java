@@ -45,7 +45,7 @@ public class ChatThreadController extends BaseController {
     }
 
     @PutMapping("/{threadId}")
-    public ChatThreadResponseDTO  updateThreadName(@PathVariable Long threadId, @RequestBody CreateThreadRequestDTO request, Authentication authentication) throws ChatgptException {
+    public ChatThreadResponseDTO  updateThreadName(@PathVariable("threadId") Long threadId, @RequestBody CreateThreadRequestDTO request, Authentication authentication) throws ChatgptException {
 
         Long userId = extractUserIdFromAuthentication(authentication);
 
@@ -56,7 +56,7 @@ public class ChatThreadController extends BaseController {
 
 
     @DeleteMapping("/{threadId}")
-    public void deleteThread(@PathVariable Long threadId, Authentication authentication) throws ChatgptException {
+    public void deleteThread(@PathVariable("threadId") Long threadId, Authentication authentication) throws ChatgptException {
 
         Long userId = extractUserIdFromAuthentication(authentication);
 

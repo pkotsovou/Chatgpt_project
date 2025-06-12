@@ -109,7 +109,7 @@ public class MessageController extends BaseController {
 
 
     @GetMapping("/thread/{threadId}")
-    public List<MessageResponseDTO> getMessagesForThread(@PathVariable Long threadId, Authentication authentication) throws ChatgptException {
+    public List<MessageResponseDTO> getMessagesForThread(@PathVariable("threadId") Long threadId, Authentication authentication) throws ChatgptException {
 
         Long userId = extractUserIdFromAuthentication(authentication);
 
