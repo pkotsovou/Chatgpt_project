@@ -41,8 +41,6 @@ _Main Chat interface with:_
 - Chat window with message history
 - LLM model selector
 - Upload PDF/TXT support
-- Auto-scroll on new message
-- Auto-create thread on first message
 
 ![Chat Page](screenshots/chat.png)
 ![Chat Page - With pdf](screenshots/chat_pdf.png)
