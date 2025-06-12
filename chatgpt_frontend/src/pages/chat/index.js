@@ -108,18 +108,15 @@ export default function ChatPage() {
     }, [activeThreadId]);
 
 
-    const handleSendMessage = () => {
+    const actuallySendMessage = (threadIdToUse) => {
         const token = localStorage.getItem("token");
 
-        if (!newMessageContent.trim() && !selectedFile) return; // Μην στείλεις άδειο
-
-        if (activeThreadId == null) return;
+        if (!newMessageContent.trim() && !selectedFile) return;
 
         if (selectedFile) {
-            // Με αρχείο → χρησιμοποιούμε /messages/upload
             const formData = new FormData();
             formData.append("data", JSON.stringify({
-                threadId: activeThreadId,
+                threadId: threadIdToUse,
                 content: newMessageContent,
                 model: selectedModel
             }));
@@ -129,7 +126,6 @@ export default function ChatPage() {
                 method: "POST",
                 headers: {
                     "Authorization": "Bearer " + token
-                    // ⚠️ Μην βάλεις Content-Type → το βάζει αυτόματα το browser (multipart/form-data)
                 },
                 body: formData
             })
@@ -148,13 +144,12 @@ export default function ChatPage() {
                             id: Math.random(),
                             content: newMessageContent,
                             isLLMGenerated: false,
-                            fileUrl: URL.createObjectURL(selectedFile), // προσωρινά
+                            fileUrl: URL.createObjectURL(selectedFile),
                             fileName: selectedFile.name
                         },
                         data
                     ]);
 
-                    // Reset inputs
                     setNewMessageContent("");
                     setSelectedFile(null);
                 })
@@ -162,7 +157,6 @@ export default function ChatPage() {
                     console.error("Error sending message with file:", error);
                 });
         } else {
-            // Χωρίς αρχείο → κανονικό /messages
             fetch("http://localhost:8080/messages", {
                 method: "POST",
                 headers: {
@@ -170,7 +164,7 @@ export default function ChatPage() {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    threadId: activeThreadId,
+                    threadId: threadIdToUse,
                     content: newMessageContent,
                     model: selectedModel
                 })
@@ -201,6 +195,52 @@ export default function ChatPage() {
                 });
         }
     };
+
+
+
+    const handleSendMessage = () => {
+        const token = localStorage.getItem("token");
+
+        if (!newMessageContent.trim() && !selectedFile) return;
+
+        if (activeThreadId == null) {
+            // Δημιουργούμε αυτόματα νέο thread
+            fetch("http://localhost:8080/threads", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + token,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: "New Chat"
+                })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Failed to create thread");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Auto-created thread:", data);
+
+                    setThreads(prev => [...prev, data]);
+                    setActiveThreadId(data.id);
+
+                    // Στέλνουμε το μήνυμα με το νέο threadId
+                    actuallySendMessage(data.id);
+                })
+                .catch(error => {
+                    console.error("Error creating thread:", error);
+                });
+
+            return;
+        }
+
+        // Αν υπάρχει ήδη activeThreadId → απλά στέλνουμε
+        actuallySendMessage(activeThreadId);
+    };
+
 
 
 
