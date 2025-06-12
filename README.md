@@ -31,7 +31,9 @@ _New users can register with profile information_
 
 ### 3️⃣ Account Page
 _View and update profile, delete account with confirmation modal_
-![Account Page](screenshots/account.png)
+![Account Page](screenshots/account1.png)
+![Account Page](screenshots/account2.png)
+
 
 ### 4️⃣ Chat Page
 _Main Chat interface with:_
