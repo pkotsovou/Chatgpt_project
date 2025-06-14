@@ -45,7 +45,7 @@ public class UserController {
 
     @PostMapping("/login")
     public TokenDTO login(Authentication authentication) throws ChatgptException {
-        User loggedInUser = (User) authentication.getPrincipal(); // UserDetails
+        User loggedInUser = (User) authentication.getPrincipal();
 
         // 2) Build JWT claims
         Instant now = Instant.now();

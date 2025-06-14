@@ -68,7 +68,6 @@ public class MessageService {
 
         if (fileUrl != null) {
             try {
-                // Προσοχή → εδώ "απογυμνώνουμε" το url prefix, πχ αν fileUrl = "/uploads/xxx" → κρατάμε το path
                 String filePathStr = fileUrl.startsWith("/") ? fileUrl.substring(1) : fileUrl;
                 Path filePath = Paths.get(filePathStr);
 
@@ -121,13 +120,11 @@ public class MessageService {
         // Prepare chat history for LLM
         List<Message> previousMessages = messageRepository.findByThreadIdOrderByCreatedAtAsc(threadId);
 
-        // Optional: Αν θες να στέλνεις μόνο τα τελευταία 10 messages:
         int maxMessages = 15;
         if (previousMessages.size() > maxMessages) {
             previousMessages = previousMessages.subList(previousMessages.size() - maxMessages, previousMessages.size());
         }
 
-        // Build full ChatMessage list
         ChatMessage systemMessage = new ChatMessage("system", systemPrompt);
 
         List<ChatMessage> chatHistory = previousMessages.stream()
@@ -137,12 +134,11 @@ public class MessageService {
                 ))
                 .collect(Collectors.toList());
 
-        // Add current user message (the new one we just saved)
         chatHistory.add(new ChatMessage("user", content));
 
         List<ChatMessage> fullChatMessages = new ArrayList<>();
-        fullChatMessages.add(systemMessage); // system prompt first
-        fullChatMessages.addAll(chatHistory); // chat history + current message
+        fullChatMessages.add(systemMessage);
+        fullChatMessages.addAll(chatHistory);
 
         // Call Groq API
         RestTemplate restTemplate = new RestTemplate();

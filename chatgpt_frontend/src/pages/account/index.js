@@ -12,7 +12,7 @@ export default function AccountPage() {
         notes: ""
     });
 
-    const [email, setEmail] = useState(""); // ξεχωριστό state
+    const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState(null);
     const [traits, setTraits] = useState([]);
@@ -26,7 +26,7 @@ export default function AccountPage() {
 
     useEffect(() => {
         const token = localStorage.getItem("token");
-        if (!token || isAccountDeleted) return; // <<-- ✅ check για να ΜΗΝ τρέχουν τα GET μετά το delete
+        if (!token || isAccountDeleted) return;
 
         // 1. Load user profile
         axios
@@ -63,13 +63,12 @@ export default function AccountPage() {
                 console.warn("❌ Αποτυχία GET /traits/me:", err);
             });
 
-    }, [isAccountDeleted]); // <<-- ✅ added dependency για να ξανατρέχει ΜΟΝΟ αν αλλάξει το isAccountDeleted
+    }, [isAccountDeleted]);
 
 
 
     const handleChange = (e) => {
         const { id, value } = e.target;
-        // Αγνόησε το πεδίο email (είναι read-only)
         if (id === "email") return;
         setFormData((prev) => ({ ...prev, [id]: value }));
     };
@@ -134,8 +133,8 @@ export default function AccountPage() {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem("token"); // 🔐 Διαγραφή JWT
-        router.push("/login"); // ⏩ Redirect στο login
+        localStorage.removeItem("token");
+        router.push("/login");
     };
 
     const handleDeleteAccount = async () => {
@@ -162,10 +161,6 @@ export default function AccountPage() {
             <div className="page-container">
                 <header>
                     <div className="header-content">
-                        {/*<div className="header-brand">*/}
-                        {/*    <img src="./bootcamp-2025.03-logo.jpg" alt="Logo" className="header-logo"/>*/}
-                        {/*    <div className="header-title">Chat Application</div>*/}
-                        {/*</div>*/}
                         <a href="/chat" className="header-brand" style={{ textDecoration: "none", color: "inherit" }}>
                             <img src="./bootcamp-2025.03-logo.jpg" alt="Logo" className="header-logo"/>
                             <div className="header-title">Chat Application</div>

@@ -26,15 +26,12 @@ export default function ChatPage() {
 
     const router = useRouter();
 
-    // Φερνουμε τα threads
     useEffect(() => {
         console.log("ChatPage mounted");
 
         const token = localStorage.getItem("token");
 
         if (!token) {
-            // window.location.href = "/login";
-            // return;
             console.warn("No token - redirecting to login");
             setIsAuthorized(false);
             router.push("/login");
@@ -63,7 +60,6 @@ export default function ChatPage() {
                 return response.json();
             })
             .then(data => {
-                // Εδώ θα μπει ΜΟΝΟ αν δεν είχαμε 401
                 setThreads(data);
                 if (data.length > 0) {
                     setActiveThreadId(data[0].id);
@@ -71,7 +67,6 @@ export default function ChatPage() {
             })
             .catch(error => {
                 if (error === "Unauthorized") {
-                    // Ήδη γίνεται redirect, μην κάνεις log
                     return;
                 }
                 console.error("Error fetching threads:", error);
@@ -79,7 +74,6 @@ export default function ChatPage() {
 
     }, [router]);
 
-    // Φορτώνουμε τα messages όταν αλλάζει το activeThreadId
     useEffect(() => {
         if (activeThreadId == null) return;
 
@@ -204,7 +198,6 @@ export default function ChatPage() {
         if (!newMessageContent.trim() && !selectedFile) return;
 
         if (activeThreadId == null) {
-            // Δημιουργούμε αυτόματα νέο thread
             fetch("http://localhost:8080/threads", {
                 method: "POST",
                 headers: {
@@ -227,7 +220,6 @@ export default function ChatPage() {
                     setThreads(prev => [...prev, data]);
                     setActiveThreadId(data.id);
 
-                    // Στέλνουμε το μήνυμα με το νέο threadId
                     actuallySendMessage(data.id);
                 })
                 .catch(error => {
@@ -237,13 +229,8 @@ export default function ChatPage() {
             return;
         }
 
-        // Αν υπάρχει ήδη activeThreadId → απλά στέλνουμε
         actuallySendMessage(activeThreadId);
     };
-
-
-
-
 
     useEffect(() => {
         if (messagesEndRef.current) {
@@ -252,12 +239,12 @@ export default function ChatPage() {
     }, [messages]);
 
     const handleLogout = () => {
-        localStorage.removeItem("token"); // 🔐 Διαγραφή JWT
-        router.push("/login"); // ⏩ Redirect στο login
+        localStorage.removeItem("token");
+        router.push("/login");
     };
 
     const handleThreadOptionsClick = (e, threadId) => {
-        e.stopPropagation(); // Να μην κάνει select το thread
+        e.stopPropagation();
         setActiveOptionsThreadId(prev => (prev === threadId ? null : threadId));
     };
 
@@ -333,7 +320,6 @@ export default function ChatPage() {
                 setThreads(prevThreads => {
                     const updatedThreads = prevThreads.filter(thread => thread.id !== threadIdToDelete);
 
-                    // If active thread was deleted, reset activeThreadId
                     if (activeThreadId === threadIdToDelete) {
                         setActiveThreadId(updatedThreads.length > 0 ? updatedThreads[0].id : null);
                     }
@@ -392,34 +378,26 @@ export default function ChatPage() {
 
     function formatMessage(content) {
         let formatted = content
-            // Escape HTML tags first (optional security)
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;")
 
-            // Block code ```...``` (triple backticks)
             .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
 
-            // Inline code `...` (single backtick)
             .replace(/`([^`\n]+)`/g, '<code>$1</code>')
 
-            // Math block or inline: $...$
             .replace(/\$(.+?)\$/g, '<span class="math">$1</span>')
 
-            // URLs
             .replace(
                 /(https?:\/\/[^\s]+)/g,
                 '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
             )
 
-            // Bold **...** or *...*
             .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
             .replace(/\*(.*?)\*/g, "<strong>$1</strong>")
 
-            // Italic _..._
             .replace(/_(.*?)_/g, "<em>$1</em>")
 
-            // Bulleted lists (lines starting with *)
             .replace(
                 /(?:^|\n)(\* .+(?:\n\* .+)*)/g,
                 (match, items) => {
@@ -432,7 +410,6 @@ export default function ChatPage() {
                 }
             )
 
-            // New lines
             .replace(/\n/g, "<br/>");
 
         return formatted;
@@ -460,7 +437,6 @@ export default function ChatPage() {
                         </div>
                         <div className="profile-dropdown">
                             <input type="checkbox" id="profile-toggle"/>
-                            {/*<label htmlFor="profile-toggle" className="profile-icon">U</label>*/}
                             <label htmlFor="profile-toggle" className="profile-icon">
                                 <img src="/profile.png" alt="Profile" className="profile-img" />
                             </label>
@@ -482,13 +458,6 @@ export default function ChatPage() {
                             <button className="new-thread-btn" onClick={handleCreateNewThread}>+</button>
                         </div>
                         <div className="threads">
-                            {/*<div className="thread-item active">Thread 1</div>*/}
-                            {/*<div className="thread-item">Thread 2</div>*/}
-                            {/*<div className="thread-item">Thread 3</div>*/}
-
-                            {/*{threads && threads.map((thread) => (*/}
-                            {/*    <div key={thread.id} className="thread-item">{thread.threadName}</div>*/}
-                            {/*))}*/}
 
                             { threads.map((thread) => (
                                     <div key={thread.id} className={`thread-item-wrapper`}>
@@ -500,7 +469,6 @@ export default function ChatPage() {
                                         </div>
                                         <div className="thread-actions">
                                             <button onClick={(e) => handleThreadOptionsClick(e, thread.id)}>⋮</button>
-                                            {/* Εδώ θα βάλεις dropdown αν είναι open */}
                                             { activeOptionsThreadId === thread.id && (
                                                 <div className="thread-options-dropdown">
                                                     <div onClick={() => handleRenameThread(thread.id)}>Rename Thread</div>
@@ -511,33 +479,18 @@ export default function ChatPage() {
                                     </div>
                                 )) }
 
-
-
-                            {/*
-                        if(threads != null and threads.length > 0) {
-                            for (let i = 0; i < threads.length; i++) {
-                                let thread = threads[i];
-                                return <div className="thread-item">{thread.threadName}</div>
-                            }
-                        }
-                        */}
-
                         </div>
                     </aside>
                     <main className="main-container">
                         <div className="chat-window">
-                            {/* Model selector centered in chat */}
                             <div className="chat-model-select">
                                 <select id="model-select" value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)}>
-                                    <option value="llama3-8b-8192">LLaMA 3 - 8B</option>
                                     <option value="llama3-70b-8192">LLaMA 3 - 70B</option>
+                                    <option value="llama3-8b-8192">LLaMA 3 - 8B</option>
                                     <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
                                 </select>
                             </div>
                             <div className="messages" ref={messagesEndRef}>
-                                {/*<div className="message bot">Hello! I’m ChatGPT—how can I help you today?</div>*/}
-                                {/*<div className="message user">Can you show me how this chat layout works?</div>*/}
-
                                 {messages.map((msg) => (
                                     <div key={msg.id} className={`message ${msg.isLLMGenerated ? "bot" : "user"}`}>
                                         <div
@@ -613,7 +566,7 @@ export default function ChatPage() {
                                     onChange={(e) => setNewMessageContent(e.target.value)}
                                     style={{
                                         width: "100%",
-                                        paddingRight: "90px", // χώρο για τα κουμπιά
+                                        paddingRight: "90px",
                                         paddingLeft: "0.75rem",
                                         paddingTop: "0.75rem",
                                         paddingBottom: "0.75rem",
@@ -651,13 +604,12 @@ export default function ChatPage() {
                                         📎
                                         <input
                                             type="file"
-                                            ref={fileInputRef} // Εδώ απλά το βάζεις
+                                            ref={fileInputRef}
                                             style={{ display: "none" }}
                                             onChange={(e) => {
                                                 const file = e.target.files[0];
                                                 if (file) {
                                                     setSelectedFile(file);
-                                                    // Reset input value so choosing the same file again works:
                                                     fileInputRef.current.value = null;
                                                 }
                                             }}
@@ -731,7 +683,7 @@ export default function ChatPage() {
         const [inputValue, setInputValue] = useState("");
 
         useEffect(() => {
-            if (isOpen) setInputValue(""); // Reset on open
+            if (isOpen) setInputValue("");
         }, [isOpen]);
 
         if (!isOpen) return null;

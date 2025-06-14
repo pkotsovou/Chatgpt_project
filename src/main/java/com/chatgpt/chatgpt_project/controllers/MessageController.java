@@ -31,7 +31,6 @@ public class MessageController extends BaseController {
         this.chatThreadService = chatThreadService;
     }
 
-    // Απλό JSON - χωρίς αρχείο
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public MessageResponseDTO createMessageJson(
             @RequestBody CreateMessageRequestDTO request,
@@ -39,10 +38,8 @@ public class MessageController extends BaseController {
     ) throws ChatgptException {
         Long userId = extractUserIdFromAuthentication(authentication);
 
-        // Έλεγχος access στο thread
         chatThreadService.getThreadForUser(userId, request.getThreadId());
 
-        // Δημιουργία μηνύματος χωρίς αρχείο
         Message llmMessage = messageService.createMessageAndGetCompletion(
                 userId,
                 request.getThreadId(),
@@ -55,7 +52,6 @@ public class MessageController extends BaseController {
     }
 
 
-    // Multipart - με αρχείο
     @PostMapping(path = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public MessageResponseDTO createMessageWithFile(
             @RequestPart("data") String data,
@@ -64,7 +60,6 @@ public class MessageController extends BaseController {
     ) throws ChatgptException {
         Long userId = extractUserIdFromAuthentication(authentication);
 
-        // Μετατροπή του data (JSON string) σε DTO
         CreateMessageRequestDTO request;
         try {
             ObjectMapper mapper = new ObjectMapper();
@@ -73,11 +68,8 @@ public class MessageController extends BaseController {
             throw new ChatgptException("Invalid message data format", HttpStatus.BAD_REQUEST);
         }
 
-        // Έλεγχος access στο thread
         chatThreadService.getThreadForUser(userId, request.getThreadId());
 
-
-        // Handle file upload
         String fileUrl = null;
         if (file != null && !file.isEmpty()) {
             String uploadDir = System.getProperty("user.dir") + "/uploads/";
@@ -95,7 +87,6 @@ public class MessageController extends BaseController {
             fileUrl = "/uploads/" + newFileName;
         }
 
-        // Δημιουργία μηνύματος με fileUrl
         Message llmMessage = messageService.createMessageAndGetCompletion(
                 userId,
                 request.getThreadId(),
@@ -113,7 +104,6 @@ public class MessageController extends BaseController {
 
         Long userId = extractUserIdFromAuthentication(authentication);
 
-        // Ελέγχουμε αν ο χρήστης έχει access στο thread
         chatThreadService.getThreadForUser(userId, threadId);
 
         List<Message> messages = messageService.getMessagesForThread(threadId);

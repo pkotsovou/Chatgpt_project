@@ -70,7 +70,6 @@ public class UserService implements UserDetailsService {
     }
 
 
-    // Get current user from Authentication (αντί για session)
     public ResponseEntity<UserResponseDTO> getMe(Authentication authentication) throws ChatgptException {
         User user = extractUser(authentication);
         System.out.println("Authenticated as: " + authentication.getName());
@@ -84,7 +83,6 @@ public class UserService implements UserDetailsService {
     }
 
 
-    // Update me
     public ResponseEntity<UserResponseDTO> updateMe(UserUpdateDTO updatedUserDto, Authentication authentication) throws ChatgptException {
         User user = extractUser(authentication);
 
@@ -126,15 +124,12 @@ public class UserService implements UserDetailsService {
     }
 
 
-
-
-    // Helper
     private User extractUser(Authentication authentication) throws ChatgptException {
         if (authentication == null || authentication.getName() == null) {
             throw new ChatgptException("Μη εξουσιοδοτημένος χρήστης", HttpStatus.UNAUTHORIZED);
         }
 
-        String email = authentication.getName(); // απευθείας από το JWT subject
+        String email = authentication.getName();
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ChatgptException("Ο χρήστης δεν βρέθηκε", HttpStatus.NOT_FOUND));
     }

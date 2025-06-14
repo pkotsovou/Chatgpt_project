@@ -41,17 +41,14 @@ public class UserTraitService {
     @Transactional
     public void saveTraitsForUser(Long userId, UserTraitDTO dto) throws ChatgptException {
 
-        // Δεν θέλουμε exception → Optional<User>
         Optional<User> optionalUser = userRepository.findById(userId);
 
         if (optionalUser.isEmpty()) {
-            // Αν δεν υπάρχει user, απλά return.
             return;
         }
 
         User user = optionalUser.get();
 
-        // Για απλότητα → σβήνουμε όλα τα προηγούμενα traits και ξαναβάζουμε τα νέα
         userTraitRepository.deleteByUserId(userId);
 
         List<UserTrait> traitsToSave = dto.getTraits().stream()

@@ -2,7 +2,6 @@ package com.chatgpt.chatgpt_project.models.dto.chat;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-// Usage.java
 public class Usage {
     @JsonProperty("queue_time")
     private double queueTime;
@@ -18,7 +17,5 @@ public class Usage {
     private int totalTokens;
     @JsonProperty("total_time")
     private double totalTime;
-
-    // getters & setters omitted for brevity
 }
 

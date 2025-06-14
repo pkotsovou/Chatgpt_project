@@ -45,7 +45,6 @@ public class ChatThreadService {
         ChatThread thread = chatThreadRepository.findById(threadId)
                 .orElseThrow(() -> new ChatgptException("Thread not found", HttpStatus.NOT_FOUND));
 
-        // Έλεγχος ownership
         if (!thread.getUser().getId().equals(userId)) {
             throw new ChatgptException("You do not have permission to update this thread.", HttpStatus.FORBIDDEN);
         }
@@ -60,7 +59,6 @@ public class ChatThreadService {
         ChatThread thread = chatThreadRepository.findById(threadId)
                 .orElseThrow(() -> new ChatgptException("Thread not found", HttpStatus.NOT_FOUND));
 
-        // Έλεγχος ownership
         if (!thread.getUser().getId().equals(userId)) {
             throw new ChatgptException("You do not have permission to delete this thread.", HttpStatus.FORBIDDEN);
         }

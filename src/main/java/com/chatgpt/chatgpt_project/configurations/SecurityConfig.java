@@ -35,18 +35,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // allow all origins
         config.setAllowedOriginPatterns(List.of("*"));
-        // allow all standard HTTP methods
         config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
-        // allow any header
         config.setAllowedHeaders(List.of("*"));
-        // if you need to expose any response headers to the browser
         config.setExposedHeaders(List.of("Authorization", "Content-Disposition"));
-        // if you want to allow cookies/credentials
         config.setAllowCredentials(true);
 
-        // apply this config to all paths
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
@@ -55,20 +49,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, UserService userService) throws Exception {
         http
-                // all endpoints require authentication
                 .authorizeHttpRequests(auth -> auth
 
                         .requestMatchers("/actuator/**", "/api/users/login", "/api/users/register").permitAll()
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(userService)
-                // enable HTTP Basic
                 .httpBasic(Customizer.withDefaults())
-                // replace the deprecated jwt() reference with:
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(Customizer.withDefaults())
                 )
-                // disable CSRF if you’re only serving a pure REST API
                 .csrf(csrf -> csrf.disable());
 
         return http.build();
@@ -97,7 +87,7 @@ public class SecurityConfig {
 
     @Bean
     public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) throws JOSEException {
-        // 1) select the JWK with your key-ID
+        // 1) select the JWK with key-ID
         JWKSelector selector = new JWKSelector(
                 new JWKMatcher.Builder()
                         .keyID("rsa-key-1")

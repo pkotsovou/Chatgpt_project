@@ -1,6 +1,5 @@
 package com.chatgpt.chatgpt_project.models.dto.chat;
 
-// ChatMessage.java
 public class ChatMessage {
     private String role;
     private String content;

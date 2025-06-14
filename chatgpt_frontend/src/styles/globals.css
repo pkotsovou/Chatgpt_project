@@ -18,19 +18,18 @@ header, footer { background: #2d2f3e; color: #f3f3ff; padding: 1rem 2rem; }
 /* Profile Dropdown */
 .profile-dropdown { position: relative; }
 .profile-dropdown input { display: none; }
-/*.profile-icon { width: 2.5rem; height: 2.5rem; background: #4f46e5; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; font-size: 1.1rem; cursor: pointer; }*/
 
 .profile-icon {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
-  overflow: hidden; /* πολύ βασικό για να μην βγαίνει έξω η εικόνα */
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  background: #fff; /* optional, αν θες λευκό φόντο γύρω από την εικόνα */
-  border: 1px solid #ccc; /* optional, αν θες περίγραμμα */
+  background: #fff;
+  border: 1px solid #ccc;
 }
 
 .profile-icon img.profile-img {
@@ -52,16 +51,15 @@ header, footer { background: #2d2f3e; color: #f3f3ff; padding: 1rem 2rem; }
 .threads-list { width: 14rem; background: #fff; border-radius: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; min-height: 0;}
 .threads-list h2 { padding: 1rem; font-size: 1rem; border-bottom: 1px solid #e5e5ea; }
 .threads { flex: 1; padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; overflow-y: auto; }
-/*.thread-item { padding: 0.75rem 1rem; border-radius: 0.5rem; background: #f8f8f8; cursor: pointer; transition: background 0.2s; }*/
 .thread-item-wrapper {
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: relative;
-  padding-right: 0.5rem; /* Για να μην κολλάει η ⋮ */
+  padding-right: 0.5rem;
 }
 .thread-item {
-  flex-grow: 1; /* Για να πιάνει τον διαθέσιμο χώρο */
+  flex-grow: 1;
   padding: 0.75rem 1rem;
   border-radius: 0.5rem;
   background: #f8f8f8;
@@ -252,14 +250,14 @@ form { background: #fff; border-radius: 0.5rem; padding: 2rem; box-shadow: 0 2px
 .threads-header h2 {
   font-size: 1rem;
   font-weight: 600;
-  flex-grow: 1; /* Να πιάνει όλο το διαθέσιμο χώρο */
+  flex-grow: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .new-thread-btn {
-  display: flex; /* <== αυτό το προσθέτουμε */
+  display: flex;
   align-items: center;
   justify-content: center;
   background: #4f46e5;
@@ -279,8 +277,6 @@ form { background: #fff; border-radius: 0.5rem; padding: 2rem; box-shadow: 0 2px
 }
 
 
-
-/* Buttons inside modal */
 .modal button {
   padding: 0.6rem 1.2rem;
   border-radius: 6px;
@@ -300,7 +296,7 @@ form { background: #fff; border-radius: 0.5rem; padding: 2rem; box-shadow: 0 2px
 }
 
 .modal .btn-primary {
-  background: #ef4444; /* Red for Delete */
+  background: #ef4444;
   color: #fff;
 }
 
@@ -309,7 +305,7 @@ form { background: #fff; border-radius: 0.5rem; padding: 2rem; box-shadow: 0 2px
 }
 
 .modal .btn-confirm {
-  background: #4f46e5; /* Μωβ/μπλε όπως το primary του app */
+  background: #4f46e5;
   color: #fff;
 }
 
@@ -336,11 +332,11 @@ form { background: #fff; border-radius: 0.5rem; padding: 2rem; box-shadow: 0 2px
   padding: 2px 4px;
   border-radius: 4px;
   font-style: italic;
-  color: #1f2937; /* dark gray */
+  color: #1f2937;
 }
 
 code {
-  background-color: #1f2937;  /* dark background */
+  background-color: #1f2937;
   color: #f8f8f2;
   padding: 2px 4px;
   border-radius: 4px;
@@ -351,7 +347,7 @@ code {
 pre code {
   display: block;
   padding: 1rem;
-  background-color: #1f2937; /* dark background */
+  background-color: #1f2937;
   color: #f8f8f2;
   border-radius: 8px;
   overflow-x: auto;
@@ -359,7 +355,7 @@ pre code {
 }
 
 ul {
-  padding-left: 2rem;  /* πιο μεγάλο αριστερό padding */
+  padding-left: 2rem;
   margin: 0.5rem 0;
 }
 

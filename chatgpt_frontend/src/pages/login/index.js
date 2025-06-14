@@ -31,11 +31,11 @@ export default function LoginPage() {
 
     function showMessage(type, text) {
         setMessage({ type, text });
-        setTimeout(() => setMessage(null), 3000); // εξαφανίζεται μετά από 3s
+        setTimeout(() => setMessage(null), 3000);
     }
 
     async function handleLogin(e) {
-        e.preventDefault(); // αποτρέπουμε default submit συμπεριφορά
+        e.preventDefault();
 
         setLoading(true);
         const credentials = btoa(`${email}:${password}`);
@@ -43,7 +43,7 @@ export default function LoginPage() {
         try {
             const response = await axios.post(
                 "http://localhost:8080/api/users/login",
-                {}, // no body
+                {},
                 {
                     headers: {
                         "Authorization": `Basic ${credentials}`,
@@ -84,7 +84,6 @@ export default function LoginPage() {
 
             showMessage("success", "Account created successfully. You can now log in.");
 
-            // Reset πεδία και άνοιξε το login tab
             setSignupName("");
             setSignupEmail("");
             setSignupPassword("");
@@ -115,7 +114,6 @@ export default function LoginPage() {
 
                     </div>
                 </header>
-                {/* Μήνυμα */}
                 {message && (
                     <div className={`alert ${message.type}`}>{message.text}</div>
                 )}
